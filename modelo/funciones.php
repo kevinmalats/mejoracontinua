@@ -41,5 +41,19 @@ class funciones {
         
        
    }
+   public function verificarCodigo(){
+       $objColec= new colectorTramite();
+       $cont=0;
+       foreach ($this->objColectorTra->obtenerTramite() as $tramite){
+           if($tramite->getCodigoEstadoTramite()== 130){
+               $objColec->añadirTramite($tramite);
+               $cont++;
+           }
+       }
+       echo $cont."Tramites";
+       foreach ($objColec->obtenerTramite() as $tramite){
+           echo $tramite->getCodigoEstadoTramite();
+       }
+   }
    
 }

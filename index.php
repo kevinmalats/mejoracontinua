@@ -16,8 +16,9 @@ and open the template in the editor.
       $objFunciones= new funciones();
       $objFunciones->consultaTramite();
       foreach ($objFunciones->getColectorTramite()->obtenerTramite()as $tramite ){
-          echo "codigo ".$tramite->getCodigoDocumento();
+          echo "codigo ".$tramite->getCodigoEstadoTramite();
       }
+      $objFunciones->verificarCodigo();
  ?>
     </body>
 </html>
