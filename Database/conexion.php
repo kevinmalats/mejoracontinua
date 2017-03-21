@@ -33,6 +33,8 @@ class Conexion {
            if($tipo=='VUE'){
             $cadena = "host='$this->hostVUE' port='$this->portVUE' dbname='$this->dbnameVUE' user='$this->userVUE' password='$this->passwordVUE'";
              $this->conexion= pg_connect($cadena) or die('Error');
+             
+             
         }else{
             $cadena = "host='$this->host' port='$this->port' dbname='$this->dbname' user='$this->user' password='$this->password'";
               $this->conexion= pg_connect($cadena) or die('Error');

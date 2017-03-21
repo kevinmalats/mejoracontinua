@@ -12,25 +12,12 @@ and open the template in the editor.
     <body>
         <?php
         
-       require_once filter_input(INPUT_SERVER, "DOCUMENT_ROOT").'/PruebaKM/Database/conexion.php';
-        $con= new Conexion("VUE");
-        $fila=  count($con->consulta());
-        $resultado= $con->consulta() ;
-        ?>
-       <!-- <table>
-            <tr>
-                <td><?php for ( $i=0; $i<$fila; $i++ ){?>
-            <tr>
-                <?php echo $resultado[$i];?>
-            </tr>
-                    
-               <?php }?>
-            </tr>
-        </table>-->
-        <?php for ( $i=0; $i<$fila; $i++ ){
-            //$resultado[$i]="Bad bunny ";
-            //echo $resultado[$i];
-        }
-        ?>
+       require_once filter_input(INPUT_SERVER, "DOCUMENT_ROOT").'/MejoraContinua/modelo/funciones.php';
+      $objFunciones= new funciones();
+      $objFunciones->consultaTramite();
+      foreach ($objFunciones->getColectorTramite()->obtenerTramite()as $tramite ){
+          echo "codigo ".$tramite->getCodigoDocumento();
+      }
+ ?>
     </body>
 </html>

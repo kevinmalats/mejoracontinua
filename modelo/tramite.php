@@ -17,6 +17,11 @@ class tramite {
     private $idRegistrador;
     private $codigoEstadoTramite;
     
+    public function __construct() {
+
+    }
+
+
     public function setNumeroSolicitud($ns){
         $this->numeroSoilicitud=$ns;
     }
