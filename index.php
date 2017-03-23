@@ -15,9 +15,18 @@ and open the template in the editor.
        require_once filter_input(INPUT_SERVER, "DOCUMENT_ROOT").'/MejoraContinua/modelo/funciones.php';
       $objFunciones= new funciones();
       $objFunciones->consultaTramite();
-      foreach ($objFunciones->getColectorTramite()->obtenerTramite()as $tramite ){
-          echo "codigo ".$tramite->getCodigoEstadoTramite();
-      }
+      
+      /*for ($i=0; $i<7;$i++){   
+      echo "Ecuador";
+           print str_pad('',4096)."\n";
+    
+   
+              usleep(3000000);
+      }*/
+     /* foreach ($objFunciones->getColectorTramite()->obtenerTramite()as $tramite ){
+          echo "codigo ".$tramite->getNumeroSolicitud();
+        
+      }*/
       $objFunciones->consultaLaTablaInf();
  ?>
     </body>

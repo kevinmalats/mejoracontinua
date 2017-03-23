@@ -36,7 +36,9 @@ class funciones {
 				  and b.orgz_cd ='130'			  
 				  and (b.afr_prst_cd = '130')
 				  and (b.ntfc_cfm_cd='12')
-				  and (b.dcm_cd like '%27%' or b.dcm_cd like '%33%' or b.dcm_cd like '%19%' or b.dcm_cd like '%45%' 
+                                  
+                                  and b.req_no like '01009988201400000274P'
+				  and (b.dcm_cd like '%001%' or b.dcm_cd like '%33%' or b.dcm_cd like '%19%' or b.dcm_cd like '%45%' 
 				  or b.dcm_cd like '%21%' or b.dcm_cd like '%32%' or b.dcm_cd like '%10%' or b.dcm_cd like '%12%' 
 				  or b.dcm_cd like '%14%' or b.dcm_cd like '%08%' or b.dcm_cd like '%42%' or b.dcm_cd like '130-006%' 
 				  or b.dcm_cd like '130-040%' or b.dcm_cd like '130-044%' or b.dcm_cd like '%19%' or b.dcm_cd like '%34%'
@@ -62,14 +64,14 @@ class funciones {
        
    }
    private function verNumCod($req_no){
-       echo $req_no;
+      // echo $req_no;
        $result=$this->ejecutarQuery("(select a.dcm_cd as dcm_cd from vue_gateway.tn_eld_edoc_last_stat a where a.req_no = '".$req_no."' and a.orgz_cd = '130')");
        $array= pg_fetch_array($result,NULL,PGSQL_ASSOC);
        $req=$array['dcm_cd'];
         // echo $req;
        $res= substr($req, 0, -3);
        $res=$res."RES";
-       echo $res;
+      // echo $res;
        
        //echo $req["dcm_cd"];
        $result=$this->ejecutarQuery("(SELECT count(ORD_NO) FROM vue_gateway.tn_eld_rpsb_atr_inf WHERE REQ_NO = '".$req_no."' and use_fg='N' and ntfc_cfm_cd='12')");
@@ -89,22 +91,30 @@ class funciones {
        }
        try{
            $this->managerTransaction("begin");
+           echo $req_no;
            $this->ejecutarQuery("update vue_gateway.tn_eld_rpsb_atr_inf set ntfc_cfm_cd ='21', use_fg='S', mdf_dt=now()
 			where  req_no='".$req_no."'	  
 			  and  use_fg='N'
 			  and  ntfc_cfm_cd='12'");
+           $this->managerTransaction("commit");
+          for ($i=0; $i<10;$i++){  
+           echo "desconecta";
       
-       
+            print str_pad('',4096)."\n";
+    
+   
+              usleep(3000000);
+          }
    
            $this->ejecutarQuery("select  bonita.accion_actualizar_laststat('".$req_no."', '".$res."', '320', 0, '21', '130')"); 
    
-           
+          $this->managerTransaction("commit");
+         $this->managerTransaction("end");   
        } catch (Exception $ex) {
              echo "Error en el query";
              $this->managerTransaction("roolback");
        }
-       $this->managerTransaction("commit");
-       $this->managerTransaction("end");
+       
        
         
    }
@@ -137,10 +147,10 @@ class funciones {
    }
 
    public function consultaLaTablaInf(){
-       
-       foreach ($this->objColectorTra->obtenerTramite() as $tramite){
+       $this->verNumCod( $this->objColectorTra->obtenerTramite()->offsetGet(0)->getNumeroSolicitud());
+      /* foreach ($this->objColectorTra->obtenerTramite() as $tramite){
            $this->verNumCod($tramite->getNumeroSolicitud());
-       }
+       }*/
       
    }
    
