@@ -62,33 +62,78 @@ class funciones {
        
    }
    private function verNumCod($req_no){
-       $this->ejecutarQuery("(SELECT count(ORD_NO) FROM vue_gateway.tn_eld_rpsb_atr_inf WHERE REQ_NO = '".$req_no."' and use_fg='N' and ntfc_cfm_cd='12')");
-       if($result==0){
-           echo "el numero es $result";
+       echo $req_no;
+       $result=$this->ejecutarQuery("(select a.dcm_cd as dcm_cd from vue_gateway.tn_eld_edoc_last_stat a where a.req_no = '".$req_no."' and a.orgz_cd = '130')");
+       $array= pg_fetch_array($result,NULL,PGSQL_ASSOC);
+       $req=$array['dcm_cd'];
+        // echo $req;
+       $res= substr($req, 0, -3);
+       $res=$res."RES";
+       echo $res;
+       
+       //echo $req["dcm_cd"];
+       $result=$this->ejecutarQuery("(SELECT count(ORD_NO) FROM vue_gateway.tn_eld_rpsb_atr_inf WHERE REQ_NO = '".$req_no."' and use_fg='N' and ntfc_cfm_cd='12')");
+       $row= pg_fetch_array($result);
+       //echo $row[0];
+       if($row[0]==0){
+           echo "count Mal ";
        }else
-           echo "numero bien";
-       $this->ejecutarQuery("select aprb_id FROM vue_gateway.tn_eld_rpsb_atr_inf WHERE REQ_NO = '".$req_no."'");
-          if($result==''){
-           echo "el aprb_id es $result";
+           echo "numero bien ";
+      $result= $this->ejecutarQuery("select aprb_id FROM vue_gateway.tn_eld_rpsb_atr_inf WHERE REQ_NO = '".$req_no."'");
+      $row= pg_fetch_array($result); 
+      //echo "el aprb_id es". $row["aprb_id"]." " ;
+      if($row["aprb_id"]==''){
+           echo "aprb Mal ";
        }  else {
-           echo "aprb bien";
+           echo "aprb bien ";
        }
        try{
+           $this->managerTransaction("begin");
            $this->ejecutarQuery("update vue_gateway.tn_eld_rpsb_atr_inf set ntfc_cfm_cd ='21', use_fg='S', mdf_dt=now()
 			where  req_no='".$req_no."'	  
 			  and  use_fg='N'
 			  and  ntfc_cfm_cd='12'");
       
        
-       $this->ejecutarQuery("PERFORM bonita.accion_actualizar_laststat(c_req_no.req_no, _dcm_cd_RES, '320', 0, '21', '130')"); 
-       
+   
+           $this->ejecutarQuery("select  bonita.accion_actualizar_laststat('".$req_no."', '".$res."', '320', 0, '21', '130')"); 
+   
+           
        } catch (Exception $ex) {
              echo "Error en el query";
+             $this->managerTransaction("roolback");
        }
+       $this->managerTransaction("commit");
+       $this->managerTransaction("end");
+       
         
    }
+  private  function managerTransaction($operacion){
+		if(func_num_args()==1){
+			$operacion = strtolower($operacion);
+			if($operacion=="begin"){
+				return $this->ejecutarQuery("BEGIN WORK; ");
+			}
+			elseif ($operacion=="commit"){
+				return $this->ejecutarQuery(" COMMIT;");
+			}
+			elseif ($operacion=="rollback") {
+				return $this->ejecutarQuery(" ROLLBACK;");;
+			}
+			elseif ($operacion=="end") {
+				return $this->ejecutarQuery(" END WORK;");;
+			}
+			else {
+				return FALSE;
+			}
+		}
+		else{
+			return FALSE;
+		}
+	}
    private function ejecutarQuery($sql){
        $result= pg_query($this->objConex->conexion,$sql) or die("Error sql" . pg_last_error());
+       return $result;
    }
 
    public function consultaLaTablaInf(){
