@@ -37,7 +37,7 @@ class funciones {
 				  and (b.afr_prst_cd = '130')
 				  and (b.ntfc_cfm_cd='12')
                                   
-                                  and b.req_no like '01009988201400000274P'
+                                
 				  and (b.dcm_cd like '%001%' or b.dcm_cd like '%33%' or b.dcm_cd like '%19%' or b.dcm_cd like '%45%' 
 				  or b.dcm_cd like '%21%' or b.dcm_cd like '%32%' or b.dcm_cd like '%10%' or b.dcm_cd like '%12%' 
 				  or b.dcm_cd like '%14%' or b.dcm_cd like '%08%' or b.dcm_cd like '%42%' or b.dcm_cd like '130-006%' 
@@ -89,6 +89,32 @@ class funciones {
        }  else {
            echo "aprb bien ";
        }
+       if($res=='130-016-RES'){
+          $result=  $this->ejecutarQuery("select ctft_no  from vue_gateway.tn_inp_016 where req_no=c_req_no.req_no");
+           $secuencial=  pg_fetch_array($result);
+           if($secuencial=='S'){
+               $result=  $this->ejecutarQuery("select a.dcm_type_nm from vue_gateway.tn_inp_016 a where a.req_no = c_req_no.req_no");
+               $tipo=  pg_fetch_array($result);
+               if($tipo=='Nuevo'){
+                   $sql="UPDATE vue_gateway.tn_inp_016 
+					set 
+						ctft_no = 'INP-R'||TRIM(to_char(nextval('sec_codigoINP016'), '000000'))
+						,CTFT_ISS_DE = NOW ()
+						,CTFT_EFTV_STDT = NOW ()
+						,CTFT_EFTV_FINL_DE = now() + INTERVAL '5 years' 					
+					WHERE req_no = '".$req_no."'";
+                   $result=  $this->ejecutarQuery($sql);
+                   
+               }else{
+                    $sql="UPDATE vue_gateway.tn_inp_016 
+					set 
+						ctft_no = 'INP-R'||TRIM(to_char(nextval('sec_codigoINP016'), '000000'))
+						,CTFT_ISS_DE = NOW () 					
+					WHERE req_no  = '".$req_no."'";
+                   $result=  $this->ejecutarQuery($sql);
+               }
+           }
+       }
        try{
            $this->managerTransaction("begin");
            echo $req_no;
@@ -96,15 +122,7 @@ class funciones {
 			where  req_no='".$req_no."'	  
 			  and  use_fg='N'
 			  and  ntfc_cfm_cd='12'");
-           $this->managerTransaction("commit");
-          for ($i=0; $i<10;$i++){  
-           echo "desconecta";
-      
-            print str_pad('',4096)."\n";
-    
-   
-              usleep(3000000);
-          }
+         
    
            $this->ejecutarQuery("select  bonita.accion_actualizar_laststat('".$req_no."', '".$res."', '320', 0, '21', '130')"); 
    
@@ -114,8 +132,24 @@ class funciones {
              echo "Error en el query";
              $this->managerTransaction("roolback");
        }
+       if($res=='130-021-RES'or $res=='130-016-RES' or $res=='130-019-RES'){
+           echo "Entro a ucp";
+           $this->ejecutarQuery("select insertar_AUCP_INP('".$req_no."')");
+       }
+       $this->ejecutarQuery("select bonita.accion_revocar_130xxx('".$req_no."','SYSTEM', 'SYSTEM')");
+       echo "Exito en la transaccion $req_no";
        
-       
+       $this->ejecutarQuery("update bonita.bonita_tn_eld_edoc_last_stat d  set \"estadoAprobacion\" = false 
+		where d.codigo in (
+					select a.codigo
+					FROM 					
+						bonita.bonita_tn_eld_edoc_last_stat as a							
+					where				  
+						a.\"estadoBonita\"=FALSE
+						and a.\"estadoAprobacion\"=true
+						AND a.codigo = (select max(k.codigo) from bonita.bonita_tn_eld_edoc_last_stat k  where k.req_no='".$req_no."')
+						order by a.codigo desc
+					)");
         
    }
   private  function managerTransaction($operacion){
@@ -147,10 +181,10 @@ class funciones {
    }
 
    public function consultaLaTablaInf(){
-       $this->verNumCod( $this->objColectorTra->obtenerTramite()->offsetGet(0)->getNumeroSolicitud());
-      /* foreach ($this->objColectorTra->obtenerTramite() as $tramite){
+       //$this->verNumCod( $this->objColectorTra->obtenerTramite()->offsetGet(0)->getNumeroSolicitud());
+       foreach ($this->objColectorTra->obtenerTramite() as $tramite){
            $this->verNumCod($tramite->getNumeroSolicitud());
-       }*/
+       }
       
    }
    
