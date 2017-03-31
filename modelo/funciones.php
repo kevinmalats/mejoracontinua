@@ -63,6 +63,40 @@ class funciones {
         
        
    }
+   public function consultarTramiteRegistro(){
+       $this->objColectorTra= new colectorTramite();
+       $this->objConex= new Conexion("VUE");
+       $sql="SELECT  distinct
+					 COALESCE(b.req_no::TEXT,'No Aplica') AS req_no
+					,COALESCE(b.dcm_cd::TEXT,'No Aplica') AS dcm_cd
+					,COALESCE(b.rgsp_id::TEXT,'No Aplica') AS rgsp_id
+					,COALESCE(b.afr_prst_cd::TEXT,'No Aplica') AS afr_prst_cd																				
+				  from vue_gateway.tn_eld_edoc_last_stat as b				
+				  inner join bonita.bonita_tn_eld_edoc_last_stat as c 
+				  on b.req_no = c.req_no
+				  inner join vue_gateway.tn_inp_016 a				
+					on a.req_no = c.req_no				
+				where 1 =1
+				  and b.orgz_cd ='130'			  
+				  and (b.afr_prst_cd = '210' or b.afr_prst_cd = '420')
+				  and (b.ntfc_cfm_cd='22' or b.ntfc_cfm_cd='12')
+				  and (a.ctft_no is not null) and (a.ctft_eftv_stdt is not null) and (a.ctft_eftv_finl_de is not null)
+				  and b.mdf_dt > current_date - interval '90 day'
+				  and \"estadoBonita\"=false";
+       
+         $result= pg_query($this->objConex->conexion,$sql) or die("Error sql" . pg_last_error());
+       while($row= pg_fetch_array($result, NULL, PGSQL_ASSOC)){
+          
+           $this->objTramite=  new tramite();  
+             $this->objTramite->setCodigoDocumento($row["dcm_cd"]);
+             $this->objTramite->setNumeroSolicitud($row["req_no"]);
+             $this->objTramite->setIdRegistrador($row["rgsp_id"]);
+             $this->objTramite->setCodigoEstadoTramite($row["afr_prst_cd"]);
+             
+           $this->objColectorTra->añadirTramite($this->objTramite);
+       }
+       
+   }
    private function verNumCod($req_no){
       // echo $req_no;
        $result=$this->ejecutarQuery("(select a.dcm_cd as dcm_cd from vue_gateway.tn_eld_edoc_last_stat a where a.req_no = '".$req_no."' and a.orgz_cd = '130')");

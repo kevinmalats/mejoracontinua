@@ -13,8 +13,11 @@ and open the template in the editor.
         <?php
         
        require_once filter_input(INPUT_SERVER, "DOCUMENT_ROOT").'/MejoraContinua/modelo/funciones.php';
-      $objFunciones= new funciones();
-      $objFunciones->consultaTramite();
+              require_once filter_input(INPUT_SERVER, "DOCUMENT_ROOT").'/MejoraContinua/modelo/facturado.php';
+              $f= new facturado();
+              $f->crearArchivo();
+      //$objFunciones= new funciones();
+     // $objFunciones->consultaTramite();
       
       /*for ($i=0; $i<7;$i++){   
       echo "Ecuador";
@@ -27,7 +30,7 @@ and open the template in the editor.
           echo "codigo ".$tramite->getNumeroSolicitud();
         
       }*/
-      $objFunciones->consultaLaTablaInf();
+      //$objFunciones->consultaLaTablaInf();
  ?>
     </body>
 </html>
