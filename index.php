@@ -13,11 +13,9 @@ and open the template in the editor.
         <?php
         
        require_once filter_input(INPUT_SERVER, "DOCUMENT_ROOT").'/MejoraContinua/modelo/funciones.php';
-              require_once filter_input(INPUT_SERVER, "DOCUMENT_ROOT").'/MejoraContinua/modelo/facturado.php';
-              $f= new facturado();
-              $f->crearArchivo();
-      //$objFunciones= new funciones();
-     // $objFunciones->consultaTramite();
+ 
+      $objFunciones= new funciones();
+     $objFunciones->consultaTramite();
       
       /*for ($i=0; $i<7;$i++){   
       echo "Ecuador";
@@ -26,11 +24,11 @@ and open the template in the editor.
    
               usleep(3000000);
       }*/
-     /* foreach ($objFunciones->getColectorTramite()->obtenerTramite()as $tramite ){
+      foreach ($objFunciones->getColectorTramite()->obtenerTramite()as $tramite ){
           echo "codigo ".$tramite->getNumeroSolicitud();
         
-      }*/
-      //$objFunciones->consultaLaTablaInf();
+      }
+      $objFunciones->consultaLaTablaInf();
  ?>
     </body>
 </html>

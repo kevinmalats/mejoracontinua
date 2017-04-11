@@ -98,7 +98,7 @@ class funciones {
        
    }
    private function verNumCod($req_no){
-      // echo $req_no;
+   
        $result=$this->ejecutarQuery("(select a.dcm_cd as dcm_cd from vue_gateway.tn_eld_edoc_last_stat a where a.req_no = '".$req_no."' and a.orgz_cd = '130')");
        $array= pg_fetch_array($result,NULL,PGSQL_ASSOC);
        $req=$array['dcm_cd'];
@@ -111,18 +111,26 @@ class funciones {
        $result=$this->ejecutarQuery("(SELECT count(ORD_NO) FROM vue_gateway.tn_eld_rpsb_atr_inf WHERE REQ_NO = '".$req_no."' and use_fg='N' and ntfc_cfm_cd='12')");
        $row= pg_fetch_array($result);
        //echo $row[0];
-       if($row[0]==0){
+       if($row[0]!=1){
            echo "count Mal ";
+           $mensaje="Dos firmas para este documento #".$req_no;
+           $asunto="mensaje de error";
+           $this->enviarMail($mensaje, $asunto);
+           return;
        }else
            echo "numero bien ";
-      $result= $this->ejecutarQuery("select aprb_id FROM vue_gateway.tn_eld_rpsb_atr_inf WHERE REQ_NO = '".$req_no."'");
+      /*$result= $this->ejecutarQuery("select aprb_id FROM vue_gateway.tn_eld_rpsb_atr_inf WHERE REQ_NO = '".$req_no."'");
       $row= pg_fetch_array($result); 
       //echo "el aprb_id es". $row["aprb_id"]." " ;
       if($row["aprb_id"]==''){
            echo "aprb Mal ";
+           $mensaje="El campo aprb_id esta vacio en el documento #".$req_no;
+           $asunto="mensaje de error";
+           $this->enviarMail($mensaje, $asunto);
+           return;
        }  else {
            echo "aprb bien ";
-       }
+       }*/
        if($res=='130-016-RES'){
           $result=  $this->ejecutarQuery("select ctft_no  from vue_gateway.tn_inp_016 where req_no=c_req_no.req_no");
            $secuencial=  pg_fetch_array($result);
@@ -149,26 +157,68 @@ class funciones {
                }
            }
        }
+       $verificar=true;// variable que sirve como bandera para saber si hacer el roolback o el return en el try catch
+                for ($i=0; $i<7;$i++){   
+      echo "desconecta";
+           print str_pad('',409676)."\n";
+    
+   
+              usleep(3000000);
+      }
        try{
            $this->managerTransaction("begin");
-           echo $req_no;
-           $this->ejecutarQuery("update vue_gateway.tn_eld_rpsb_atr_inf set ntfc_cfm_cd ='21', use_fg='S', mdf_dt=now()
+          //echo $req_no;
+          $sql="update vue_gateway.tn_eld_rpsb_atr_inf set ntfc_cfm_cd ='21', use_fg='S', mdf_dt=now()
 			where  req_no='".$req_no."'	  
 			  and  use_fg='N'
-			  and  ntfc_cfm_cd='12'");
-         
+			  and  ntfc_cfm_cd='12'";
+          
+       
+           $result=$this->ejecutarQuery($sql);
+           //$result=FALSE;
+           if($result==false){
+               $verificar=  FALSE;
+           throw new Exception("Existio un error, provocado al actualizar la tabla en los campos use_fg y ntfc",1); 
+           }
    
-           $this->ejecutarQuery("select  bonita.accion_actualizar_laststat('".$req_no."', '".$res."', '320', 0, '21', '130')"); 
+                
+           $result=$this->ejecutarQuery("select  bonita.accion_actualizar_laststat('".$req_no."', '".$res."', '320', 0, '21', '130')"); 
+           //$result=FALSE;
    
+           if($result==false){
+           throw new Exception("Existio un error, provocado",0); }
+           
           $this->managerTransaction("commit");
          $this->managerTransaction("end");   
        } catch (Exception $ex) {
-             echo "Error en el query";
+           echo "Error en el query ".$ex;
+             for ($i=0; $i<7;$i++){   
+                       echo "conecta";
+                       print str_pad('',409676)."\n";
+                        usleep(3000000);
+                   }
+             
+               $mensaje="Se cayo la transaccion al actualizar datos con el documento #".$req_no;
+           $asunto="mensaje de error";
+           $this->enviarMail($mensaje, $asunto);
+             if($verificar){
+                 echo"roolback";
              $this->managerTransaction("roolback");
+             
+             return;
+             
+             }
+             else{
+                 "return";
+                 return;
+             }
+    
+            
+           
        }
        if($res=='130-021-RES'or $res=='130-016-RES' or $res=='130-019-RES'){
            echo "Entro a ucp";
-           $this->ejecutarQuery("select insertar_AUCP_INP('".$req_no."')");
+           //$this->ejecutarQuery("select insertar_AUCP_INP('".$req_no."')");
        }
        $this->ejecutarQuery("select bonita.accion_revocar_130xxx('".$req_no."','SYSTEM', 'SYSTEM')");
        echo "Exito en la transaccion $req_no";
@@ -210,16 +260,32 @@ class funciones {
 		}
 	}
    private function ejecutarQuery($sql){
-       $result= pg_query($this->objConex->conexion,$sql) or die("Error sql" . pg_last_error());
+       try {
+       $result= pg_query($this->objConex->conexion,$sql) ;//or die("Error sql" . pg_last_error());
+       if($result==false){
+       throw new Exception("Existio un error,al conectarse a la base de datos, se intentara conectar nuevamente",1); 
+       }
+       
+       } catch (Exception $ex) {
+           echo $ex;
+           $this->objConex= new Conexion("VUE");
+       }    
        return $result;
    }
 
    public function consultaLaTablaInf(){
-       //$this->verNumCod( $this->objColectorTra->obtenerTramite()->offsetGet(0)->getNumeroSolicitud());
+       $this->managerTransaction("commit");
+       
+       //echo "CODIGO A ENVIAR".$this->objColectorTra->obtenerTramite()->offsetGet(1)->getNumeroSolicitud();
+      // $this->verNumCod( $this->objColectorTra->obtenerTramite()->offsetGet(1)->getNumeroSolicitud());
        foreach ($this->objColectorTra->obtenerTramite() as $tramite){
+           echo "CODIGO A ENVIAR".$tramite->getNumeroSolicitud();
            $this->verNumCod($tramite->getNumeroSolicitud());
        }
       
+   }
+   private function enviarMail($mensaje, $asunto){
+       mail('ken_1721@hotmail.es', $asunto, $mensaje);
    }
    
 }

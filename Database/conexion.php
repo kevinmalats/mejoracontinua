@@ -27,17 +27,18 @@ class Conexion {
     private $password="1npb0n1t4";
     
     public $conexion;
+    public $cadena;
     
     
     public function __construct($tipo) {
            if($tipo=='VUE'){
-            $cadena = "host='$this->hostVUE' port='$this->portVUE' dbname='$this->dbnameVUE' user='$this->userVUE' password='$this->passwordVUE'";
-             $this->conexion= pg_connect($cadena) or die('Error');
+               $this->cadena = "host='$this->hostVUE' port='$this->portVUE' dbname='$this->dbnameVUE' user='$this->userVUE' password='$this->passwordVUE'";
+             $this->conexion= pg_connect($this->cadena) or die('Error');
              
              
         }else{
-            $cadena = "host='$this->host' port='$this->port' dbname='$this->dbname' user='$this->user' password='$this->password'";
-              $this->conexion= pg_connect($cadena) or die('Error');
+            $this->cadena = "host='$this->host' port='$this->port' dbname='$this->dbname' user='$this->user' password='$this->password'";
+              $this->conexion= pg_connect($this->cadena) or die('Error');
         }   
         }
         public function consulta(){
