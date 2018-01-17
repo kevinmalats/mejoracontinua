@@ -1,1 +1,12 @@
+language: php
+php:
+  - '7.0'
+
+install:
+ - pear install PHP_CodeSniffer
+ - phpenv rehash
+
+before_script:
+ - phpenv rehash
+ - phpcs -i
 
